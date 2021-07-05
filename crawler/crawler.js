@@ -1,5 +1,22 @@
 const HCCrawler = require('headless-chrome-crawler');
 const request_client = require('request-promise-native');
+const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+
+var filename = process.argv.slice(2)[0];
+const FILE = filename;
+console.log(FILE);
+
+const csvWriter = createCsvWriter({
+	path: FILE,
+	header: [
+		{id: 'defi_url', title: 'defi_url'},
+		{id: 'request_url', title: 'request_url'},
+		{id: 'request_headers', title: 'request_headers'},
+		{id: 'request_post_data', title: 'request_post_data'},
+		{id: 'response_headers', title: 'response_headers'},
+		{id: 'response_body', title: 'response_body'}
+	]
+});
 
 (async () => {
   const crawler = await HCCrawler.launch({
@@ -17,19 +34,17 @@ const request_client = require('request-promise-native');
       const request_headers = request.headers();
       const request_post_data = request.postData();
       const response_headers = response.headers;
-      const response_size = response_headers['content-length'];
       const response_body = response.body;
+	
+      const url = page.url();
+      csvWriter.writeRecords([{defi_url: url, 
+                              request_url: request_url, 
+                              request_headers: request_headers, 
+                              request_post_data: request_post_data, 
+                              response_headers: response_headers,
+                              response_body: response_body}]);
 
-      csv.push({
-        request_url,
-        request_headers,
-        request_post_data,
-        response_headers,
-        response_size,
-        response_body,
-      });
-
-      console.log(csv);
+	//console.log(csv);
       request.continue();
     }).catch(error => {
       console.error(error);
