@@ -2,10 +2,13 @@ const HCCrawler = require('headless-chrome-crawler');
 const request_client = require('request-promise-native');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 
-var filename = process.argv.slice(2)[0];
-const FILE = filename;
+var args = process.argv.slice(2);
+const SITE = "https://" + args[0];
+const FILE = args[1];
+console.log(SITE);
 console.log(FILE);
 
+const METAMASK_PATH = 'metamask/'
 const csvWriter = createCsvWriter({
 	path: FILE,
 	header: [
@@ -18,12 +21,16 @@ const csvWriter = createCsvWriter({
 	]
 });
 
+console.log(HCCrawler.executablePath());
+
 (async () => {
   const crawler = await HCCrawler.launch({
+    args : [`--disable-extensions-except,=${METAMASK_PATH}`,
+            `--load-extension=${METAMASK_PATH}`,
+           ],
     maxDepth: 3,
     customCrawl: async (page, crawl) => {
       // You can access the page object before requests
-      const csv = [];
       await page.setRequestInterception(true);
       page.on('request', request => {
     request_client({
@@ -43,8 +50,6 @@ const csvWriter = createCsvWriter({
                               request_post_data: request_post_data, 
                               response_headers: response_headers,
                               response_body: response_body}]);
-
-	//console.log(csv);
       request.continue();
     }).catch(error => {
       console.error(error);
@@ -58,11 +63,11 @@ const csvWriter = createCsvWriter({
       // You need to extend and return the crawled result
       return result;
     },
-    onSuccess: result => {
+    /*onSuccess: result => {
       console.log(`Got ${result.content} for ${result.options.url}.`);
-    },
+    },*/
   });
-  await crawler.queue('https://app.sushi.com/');
+  await crawler.queue(SITE);
   await crawler.onIdle();
   await crawler.close();
 })();
