@@ -1,14 +1,14 @@
 const HCCrawler = require('headless-chrome-crawler');
 const request_client = require('request-promise-native');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+const path = require('path');
 
 var args = process.argv.slice(2);
 const SITE = "https://" + args[0];
 const FILE = args[1];
-console.log(SITE);
-console.log(FILE);
 
-const METAMASK_PATH = 'metamask/'
+const METAMASK_PATH = path.resolve(__dirname, 'dappeteer-master/metamask/7.7.1/');
+console.log(METAMASK_PATH);
 const csvWriter = createCsvWriter({
 	path: FILE,
 	header: [
@@ -21,11 +21,11 @@ const csvWriter = createCsvWriter({
 	]
 });
 
-console.log(HCCrawler.executablePath());
 
 (async () => {
   const crawler = await HCCrawler.launch({
-    args : [`--disable-extensions-except,=${METAMASK_PATH}`,
+   headless: false,  
+   args : [`--disable-extensions-except=${METAMASK_PATH}`,
             `--load-extension=${METAMASK_PATH}`,
            ],
     maxDepth: 3,
