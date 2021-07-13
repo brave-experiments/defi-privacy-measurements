@@ -9,6 +9,7 @@ const FILE = args[1];
 
 const METAMASK_PATH = path.resolve(__dirname, 'dappeteer-master/metamask/7.7.1/');
 console.log(METAMASK_PATH);
+
 const csvWriter = createCsvWriter({
 	path: FILE,
 	header: [
@@ -20,7 +21,6 @@ const csvWriter = createCsvWriter({
 		{id: 'response_body', title: 'response_body'}
 	]
 });
-
 
 (async () => {
   const crawler = await HCCrawler.launch({
