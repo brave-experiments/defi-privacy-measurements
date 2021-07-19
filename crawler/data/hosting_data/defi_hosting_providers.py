@@ -13,7 +13,11 @@ HOSTING_PROVIDERS = { 'Cloudflare' : [],
 
 with open('sites_sanitized.csv', newline='') as defi_sites:
 	reader = csv.reader(defi_sites, delimiter=',')
-
+	
+	data_csv = open('hosting_provider_data.csv', 'w', newline='')
+	fieldnames = ['site', 'provider']
+	writer = csv.DictWriter(data_csv, fieldnames=fieldnames)
+	writer.writeheader()
 	for row in reader:
 		site = row[0]
 		if site == 'site':
@@ -25,18 +29,24 @@ with open('sites_sanitized.csv', newline='') as defi_sites:
 			asn = ret.decode('utf-8').split('|')[-1]
 			print(asn)
 			if "CLOUDFLARE" in asn:
+				writer.writerow({'site': site, 'provider': 'cloudflare'})
 				HOSTING_PROVIDERS['Cloudflare'].append(site)
 			elif 'AMAZON' in asn:
+				writer.writerow({'site': site, 'provider': 'aws'})
 				HOSTING_PROVIDERS['AWS'].append(site)
 			elif 'DIGITALOCEAN' in asn:
+				writer.writerow({'site': site, 'provider': 'digital ocean'})
 				HOSTING_PROVIDERS['DO'].append(site)
 			
 			elif 'GOOGLE' in asn:
 				HOSTING_PROVIDERS['Google'].append(site)
+				writer.writerow({'site': site, 'provider': 'google'})
 			else:
 				HOSTING_PROVIDERS['Other'].append(site)
+				writer.writerow({'site': site, 'provider': 'other'})
 		except Exception as e:
 			HOSTING_PROVIDERS['Unknown'].append(site)
+			writer.writerow({'site': site, 'provider': 'unknown'})
 			print(site + " : " + str(e))
 
 print('Cloudflare: ' + str(len(HOSTING_PROVIDERS['Cloudflare'])))
