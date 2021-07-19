@@ -18,6 +18,7 @@ with open('sites_sanitized.csv', newline='') as defi_sites:
 	fieldnames = ['site', 'provider']
 	writer = csv.DictWriter(data_csv, fieldnames=fieldnames)
 	writer.writeheader()
+  
 	for row in reader:
 		site = row[0]
 		if site == 'site':
@@ -47,7 +48,6 @@ with open('sites_sanitized.csv', newline='') as defi_sites:
 		except Exception as e:
 			HOSTING_PROVIDERS['Unknown'].append(site)
 			writer.writerow({'site': site, 'provider': 'unknown'})
-			print(site + " : " + str(e))
 
 print('Cloudflare: ' + str(len(HOSTING_PROVIDERS['Cloudflare'])))
 print('AWS: ' + str(len(HOSTING_PROVIDERS['AWS'])))
