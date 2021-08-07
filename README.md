@@ -1,4 +1,5 @@
-```usage: run.js [-h] -b BINARY [--debug {none,debug,verbose}] -u URL
+```
+usage: run.js [-h] -b BINARY [--debug {none,debug,verbose}] -u URL
               [-p PROFILE] [--interactive] [-t SECS]
 
 CLI tool for recording requests made when visiting a URL.
