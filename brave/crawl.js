@@ -1,39 +1,45 @@
 const braveLoggerLib = require('./logging.js')
 const bravePuppeteerLib = require('./puppeteer.js')
 
-const onRequest = async (logger, requestLog, request) => {
-  let frameUrl, frameId, frameParentId
+const onRequest = async (options, requestLog, request) => {
+  let requestContext = []
 
   const frame = request.frame()
-
   if (frame) {
-    frameUrl = frame.url()
-    frameId = frame.id
-    frameParentId = frame.parentFrame()?.id
+    if (options.printFrameHierarchy) {
+      requestContext = []
+      let parentFrame = frame
+      while (parentFrame) {
+        requestContext.push(parentFrame.url())
+        parentFrame = await parentFrame.parentFrame()
+      }
+    } else {
+      requestContext.push(frame.url())
+    }
   }
 
   const requestUrl = request.url()
   const requestType = request.resourceType()
 
   requestLog.requests.push({
-    frameId,
-    frameParentId,
-    frameUrl,
+    requestContext,
     url: requestUrl,
     type: requestType
   })
 
   const numRequests = requestLog.requests.length
+  const logger = braveLoggerLib.getLoggerForLevel(options.debugLevel)
   logger.debug(`Request ${numRequests}: ${requestUrl}`)
 }
 
-const onTargetCreated = async (logger, requestLog, target) => {
+const onTargetCreated = async (options, requestLog, target) => {
   if (target.type() !== 'page') {
     return
   }
   const page = await target.page()
-  page.on('request', onRequest.bind(undefined, logger, requestLog))
+  page.on('request', onRequest.bind(undefined, options, requestLog))
 
+  const logger = braveLoggerLib.getLoggerForLevel(options.debugLevel)
   logger.debug('Completed configuring new page.')
 }
 
@@ -45,14 +51,17 @@ const crawl = async args => {
   const log = Object.create(null)
   log.url = url
   log.arguments = args
-  log.timestamp = Date.now()
+  log.timestamps = {
+    start: Date.now(),
+    end: undefined
+  }
   log.requests = []
   log.success = true
 
   let browser
   try {
     browser = await bravePuppeteerLib.launch(args)
-    browser.on('targetcreated', onTargetCreated.bind(undefined, logger, log))
+    browser.on('targetcreated', onTargetCreated.bind(undefined, args, log))
     const page = await browser.newPage()
 
     logger.debug(`Visiting ${url}`)
@@ -74,6 +83,8 @@ const crawl = async args => {
   } catch (e) {
     logger.debug(`Error when shutting down: ${e.toString()}`)
   }
+
+  log.timestamps.end = Date.now()
   return log
 }
 

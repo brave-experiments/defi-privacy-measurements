@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 const argparseLib = require('argparse')
 
 const braveCrawlLib = require('./brave/crawl.js')
@@ -30,9 +29,13 @@ parser.add_argument('-p', '--profile', {
   help: 'Path to use and store profile data to.',
   required: false
 })
+parser.add_argument('-a', '--ancestors', {
+  help: 'Log each requests frame hierarchy, not just the immediate parent. ' +
+        '(frame URLs are recorded from immediate frame to top most frame)',
+  action: 'store_true'
+})
 parser.add_argument('--interactive', {
   help: 'Show the browser when recording (by default runs headless).',
-  required: false,
   action: 'store_true'
 })
 parser.add_argument('-t', '--secs', {

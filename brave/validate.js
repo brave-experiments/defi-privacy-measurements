@@ -25,6 +25,7 @@ const validate = rawArgs => {
   }
 
   const validatedArgs = {
+    printFrameHierarchy: !!rawArgs.ancestors,
     debugLevel: rawArgs.debug,
     headless: !rawArgs.interactive,
     profilePath: rawArgs.profile,

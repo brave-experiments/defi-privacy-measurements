@@ -1,6 +1,5 @@
-```
 usage: run.js [-h] -b BINARY [--debug {none,debug,verbose}] -u URL
-              [-p PROFILE] [--interactive] [-t SECS]
+              [-p PROFILE] [-a] [--interactive] [-t SECS]
 
 CLI tool for recording requests made when visiting a URL.
 
@@ -13,7 +12,9 @@ optional arguments:
   -u URL, --url URL     The URL to record requests no
   -p PROFILE, --profile PROFILE
                         Path to use and store profile data to.
+  -a, --ancestors       Log each requests frame hierarchy, not just the
+                        immediate parent. (frame URLs are recorded from
+                        immediate frame to top most frame)
   --interactive         Show the browser when recording (by default runs
                         headless).
   -t SECS, --secs SECS  The dwell time in seconds. Defaults: 30 sec.
-```
