@@ -5,6 +5,7 @@ import log from 'loglevel';
 import { CapabilitiesController as RpcCap } from 'rpc-cap';
 import { ethErrors } from 'eth-rpc-errors';
 import { cloneDeep } from 'lodash';
+import { createHmac } from 'crypto';
 
 import { CAVEAT_NAMES } from '../../../../shared/constants/permissions';
 import {
