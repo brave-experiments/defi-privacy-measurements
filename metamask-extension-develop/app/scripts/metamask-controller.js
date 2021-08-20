@@ -399,7 +399,7 @@ export default class MetamaskController extends EventEmitter {
     this.txController = new TransactionController({
       initState:
         initState.TransactionController || initState.TransactionManager,
-      getPermittedAccounts: this.permissionsController.getAccounts.bind(
+      getPermittedAccounts: this.permissionsController.getRealAccounts.bind(
         this.permissionsController,
       ),
       getProviderConfig: this.networkController.getProviderConfig.bind(
@@ -626,7 +626,7 @@ export default class MetamaskController extends EventEmitter {
           const selectedAddress = this.preferencesController.getSelectedAddress();
           return selectedAddress ? [selectedAddress] : [];
         } else if (this.isUnlocked()) {
-          return await this.permissionsController.getAccounts(origin);
+          return await this.permissionsController.getRealAccounts(origin);
         }
         return []; // changing this is a breaking change
       },

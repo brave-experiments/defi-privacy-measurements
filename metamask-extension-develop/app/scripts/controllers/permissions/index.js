@@ -174,6 +174,30 @@ export class PermissionsController {
     });
   }
 
+  // Returns our real Ethereum address.  We pass this function to RPC
+  // controllers that need our real rather than our derived addresses.
+  getRealAccounts(origin) {
+    return new Promise((resolve, _) => {
+      const req = { method: 'eth_accounts' };
+      const res = {};
+      this.permissions.providerMiddlewareFunction(
+        { origin },
+        req,
+        res,
+        noop,
+        _end,
+      );
+
+      function _end() {
+        if (res.error || !Array.isArray(res.result)) {
+          resolve([]);
+        } else {
+          resolve(res.result);
+        }
+      }
+    });
+  }
+
   /**
    * Returns whether the given origin has the given permission.
    *
