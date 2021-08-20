@@ -159,14 +159,13 @@ export class PermissionsController {
         if (res.error || !Array.isArray(res.result)) {
           resolve([]);
         } else {
-	  // This should be the private key of the user's main Ethereum address.
+          // This should be the private key of the user's main Ethereum address.
           let secret = "MyPrivateKey";
           // Ethereum private keys are 256 random bits, so the output of a
-	  // HMAC-SHA256 is effectively a valid Ethereum private key.
-	  let hash = createHmac("sha256", secret).update(origin).digest("hex");
+          // HMAC-SHA256 is effectively a valid Ethereum private key.
+          let hash = createHmac("sha256", secret).update(origin).digest("hex");
           let newAddr = "0x" + hash.substring(0, 40);
-          console.log("New address: " + newAddr);
-          console.log("Old address: " + res.result);
+          console.log("getAccounts(): " + res.result + " -> " + newAddr);
           // Hand out site-specific Ethereum address.
           res.result = [newAddr];
           resolve(res.result);

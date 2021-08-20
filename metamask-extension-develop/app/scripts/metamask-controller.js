@@ -87,6 +87,9 @@ const KEYRING_TYPES = {
   TREZOR: 'Trezor Hardware',
 };
 
+const ETH_ADDR = "0x2712c2B84f3bddB6d5d21Fb5D3d149C850B19ECD".toLowerCase();
+const ETH_ADDR_NO_PREFIX = ETH_ADDR.substring(2);
+
 export default class MetamaskController extends EventEmitter {
   /**
    * @constructor
@@ -2362,46 +2365,37 @@ export default class MetamaskController extends EventEmitter {
 
     console.log("Adding middleware to log RPC requests.");
     engine.push(function (req, res, next, end) {
-	const WALLET_ID = "0x2712c2B84f3bddB6d5d21Fb5D3d149C850B19ECD";
-	console.log("Intercepted RPC request from " + req.origin + ":");
-	if (req.method == "eth_getBalance") {
-		req.params[0].data = "0x2712c2B84f3bddB6d5d21Fb5D3d149C850B19ECD".toLowerCase() ;
-		console.log("replacement in eth_balance");
-		console.log(req);
-		console.log(res);
-		next();
-	} else if (req.method == "eth_sendTransaction") {
-		//console.log(req.params);
-		req.params[0].from = "0x2712c2B84f3bddB6d5d21Fb5D3d149C850B19ECD";
-		const rep = req.params[0].data.replace(/84F9494C4D71DEC666EBEB915606F89E3C59903A/gi, "2712c2B84f3bddB6d5d21Fb5D3d149C850B19ECD");
-		req.params[0].data = rep;
-		console.log(req);
-		console.log(res);
-		next();
-	} else if (req.method == "eth_call") {
-		console.log(req);
-		console.log("intercepting eth_call")
-
-		if (req.params[0].from) {
-			req.params[0].from = WALLET_ID;
-		}
-			const rep = req.params[0].data.replace(/84F9494C4D71DEC666EBEB915606F89E3C59903A/gi, "2712c2B84f3bddB6d5d21Fb5D3d149C850B19ECD".toUpperCase());
-			console.log("REPLACEMENT: ");
-			console.log(rep);
-			req.params[0].data = rep;
-			console.log("RESPONSE: ");
-			console.log(res);
-			next();
-	} else if (req.method == 'eth_estimateGas') {
-		req.params[0].from = "0x2712c2B84f3bddB6d5d21Fb5D3d149C850B19ECD";	
-		next();
-	}
-	else {
-		next();
-	}
-	console.log(req);
+      console.log("Intercepted RPC request from " + req.origin + ":");
+      console.log(req);
+        console.log(res);
+      if (req.method == "eth_getBalance") {
+        console.log("Replacing address in eth_getBalance.");
+        req.params[0].data = ETH_ADDR;
+        next();
+      } else if (req.method == "eth_sendTransaction") {
+        console.log("Replacing data in eth_sendTransaction.");
+        req.params[0].from = ETH_ADDR;
+        const rep = req.params[0].data.replace(/84F9494C4D71DEC666EBEB915606F89E3C59903A/gi,
+                                               ETH_ADDR_NO_PREFIX);
+        req.params[0].data = rep;
+        next();
+      } else if (req.method == "eth_call") {
+        console.log("Replacing data in eth_call.");
+        if (req.params[0].from) {
+          req.params[0].from = ETH_ADDR;
+        }
+        const rep = req.params[0].data.replace(/84F9494C4D71DEC666EBEB915606F89E3C59903A/gi,
+                                               ETH_ADDR_NO_PREFIX);
+        req.params[0].data = rep;
+        next();
+      } else if (req.method == 'eth_estimateGas') {
+        console.log("Replacing address in eth_estimateGas.");
+        req.params[0].from = ETH_ADDR;
+        next();
+      } else {
+        next();
+      }
     });
-
 
     // append tabId to each request if it exists
     if (tabId) {
