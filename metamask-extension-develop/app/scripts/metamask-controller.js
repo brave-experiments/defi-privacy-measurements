@@ -71,6 +71,42 @@ import MetaMetricsController from './controllers/metametrics';
 import { segment } from './lib/segment';
 import createMetaRPCHandler from './lib/createMetaRPCHandler';
 
+/* DEFI SITE WALLET IDs 
+- These are the unique fake wallet IDs generated per site
+*/
+const AAVE = "7De70E5bd05E5FE56ACe4EFEd5D58cA59B31cf3a".toLowerCase();
+const COMPOUND = "accd4e263b8a5a000591bcebc5d902f8b774daf3".toLowerCase();
+const INSTADAPP = "65fe7a78cb583ec47aff9502b57887be9ca45cc1".toLowerCase();
+const CURVE = "d506CE37A44c7B530859E96CfE19dCeE39f89c8c".toLowerCase();
+const MAKER = "5b2cC1ca2344070758b71DDf2698469B6040597C".toLowerCase();
+const UNISWAP = "84F9494C4D71dEc666ebeB915606f89e3C59903a".toLowerCase();
+const CONVEX = "88A367f6BAD6EEecd94F9A24a54D5A6122e73985".toLowerCase();
+const SUSHI = "a8b96a6DeC9Fa8AB3Ed9e2C8Cc7a71Cd7B22Ff08".toLowerCase();
+const YEARN = "8cc11a300507008058542221487577526766ba01".toLowerCase();
+const BALANCER = "FA8D94Cc1a60f5bC393A063Bc6b740c6700D316D".toLowerCase();
+
+/**
+  * Returns the uniquely generated fake wallet ID
+  * for a defi site
+  */
+
+function  getFakeWalletId(origin) {
+	if (origin == "https://app.aave.com") { return AAVE;}
+	else if (origin == "https://app.compound.finance") {return COMPOUND;}
+	else if (origin == "https://defi.instadapp.io") {return INSTADAPP;}
+	else if (origin == "https://curve.fi") { return CURVE;}
+	else if (origin == "https://oasis.app") {return MAKER;}
+	else if (origin == "https://app.uniswap.org") {return UNISWAP;}
+	else if (origin == "https://www.convexfinance.com") {return CONVEX;}
+	else if (origin == "https://app.sushi.com") {return SUSHI;}
+	else if (origin == "https://yearn.finance") {return YEARN;}
+	else if (origin == "https://app.balancer.fi") { return BALANCER; }
+	else { throw "Unsupported site!";}
+
+   }
+
+
+
 export const METAMASK_CONTROLLER_EVENTS = {
   // Fired after state changes that impact the extension badge (unapproved msg count)
   // The process of updating the badge happens in app/scripts/background.js.
@@ -2368,15 +2404,16 @@ export default class MetamaskController extends EventEmitter {
       console.log("Intercepted RPC request from " + req.origin + ":");
       console.log(req);
         console.log(res);
+      const fakeWalletId = getFakeWalletId(req.origin);
       if (req.method == "eth_getBalance") {
         console.log("Replacing address in eth_getBalance.");
-        req.params[0].data = ETH_ADDR;
+        req.params[0] = ETH_ADDR;
         next();
       } else if (req.method == "eth_sendTransaction") {
         console.log("Replacing data in eth_sendTransaction.");
         req.params[0].from = ETH_ADDR;
-        const rep = req.params[0].data.replace(/84F9494C4D71DEC666EBEB915606F89E3C59903A/gi,
-                                               ETH_ADDR_NO_PREFIX);
+        const rep = req.params[0].data.replace(new RegExp(fakeWalletId, "gi"),
+                                               ETH_ADDR);
         req.params[0].data = rep;
         next();
       } else if (req.method == "eth_call") {
@@ -2384,7 +2421,9 @@ export default class MetamaskController extends EventEmitter {
         if (req.params[0].from) {
           req.params[0].from = ETH_ADDR;
         }
-        const rep = req.params[0].data.replace(/84F9494C4D71DEC666EBEB915606F89E3C59903A/gi,
+	var reg = new RegExp(fakeWalletId, "gi");
+	console.log(reg);
+        const rep = req.params[0].data.replace(reg,
                                                ETH_ADDR_NO_PREFIX);
         req.params[0].data = rep;
         next();
@@ -3086,4 +3125,5 @@ export default class MetamaskController extends EventEmitter {
   setLocked() {
     return this.keyringController.setLocked();
   }
+
 }
