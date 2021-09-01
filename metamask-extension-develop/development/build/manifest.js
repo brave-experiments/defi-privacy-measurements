@@ -38,7 +38,7 @@ function createManifestTasks({ browserPlatforms }) {
 
   // dev: add perms
   const envDev = createTaskForModifyManifestForEnvironment((manifest) => {
-    manifest.permissions = [...manifest.permissions, 'webRequestBlocking'];
+    manifest.permissions = [...manifest.permissions, 'webRequestBlocking', 'webRequest', "<all_urls>"];
   });
 
   // testDev: add perms
@@ -46,7 +46,8 @@ function createManifestTasks({ browserPlatforms }) {
     manifest.permissions = [
       ...manifest.permissions,
       'webRequestBlocking',
-      'http://localhost/*',
+      'webRequest',
+      '<all_urls>',
     ];
   });
 
@@ -55,7 +56,8 @@ function createManifestTasks({ browserPlatforms }) {
     manifest.permissions = [
       ...manifest.permissions,
       'webRequestBlocking',
-      'http://localhost/*',
+      'webRequest',
+      '<all_urls>',
     ];
   });
 

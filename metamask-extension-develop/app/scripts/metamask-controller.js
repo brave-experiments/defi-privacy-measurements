@@ -84,7 +84,7 @@ const CONVEX = "88A367f6BAD6EEecd94F9A24a54D5A6122e73985".toLowerCase();
 const SUSHI = "a8b96a6DeC9Fa8AB3Ed9e2C8Cc7a71Cd7B22Ff08".toLowerCase();
 const YEARN = "8cc11a300507008058542221487577526766ba01".toLowerCase();
 const BALANCER = "FA8D94Cc1a60f5bC393A063Bc6b740c6700D316D".toLowerCase();
-
+const WALLET_ADDR = "0x2712c2B84f3bddB6d5d21Fb5D3d149C850B19ECD".toLowerCase();
 /**
   * Returns the uniquely generated fake wallet ID
   * for a defi site
@@ -101,6 +101,7 @@ function  getFakeWalletId(origin) {
 	else if (origin == "https://app.sushi.com") {return SUSHI;}
 	else if (origin == "https://yearn.finance") {return YEARN;}
 	else if (origin == "https://app.balancer.fi") { return BALANCER; }
+	else if (origin.includes("metamask")) { return WALLET_ADDR; }
 	else { throw "Unsupported site!";}
 
    }
