@@ -43,6 +43,10 @@ parser.add_argument('-t', '--secs', {
   type: 'int',
   default: defaultCrawlSecs
 })
+parser.add_argument('-m', '--metamask', {
+  help: 'Path to the MetaMask extension.',
+  required: false
+})
 
 const rawArgs = parser.parse_args()
 const [isValid, errorOrArgs] = braveValidateLib.validate(rawArgs)

@@ -31,6 +31,7 @@ const validate = rawArgs => {
     profilePath: rawArgs.profile,
     secs: rawArgs.secs,
     url: rawArgs.url,
+    metamaskPath: rawArgs.metamask,
     executablePath
   }
   return [true, Object.freeze(validatedArgs)]
