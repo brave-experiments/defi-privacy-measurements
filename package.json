@@ -1,0 +1,21 @@
+{
+  "name": "request-logger",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "lint": "./node_modules/standard/bin/cmd.js",
+    "lint:fix": "./node_modules/standard/bin/cmd.js --fix"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "argparse": "^2.0.1",
+    "puppeteer-core": "^10.2.0",
+    "puppeteer-extra": "^3.1.18",
+    "puppeteer-extra-plugin-stealth": "^2.7.8"
+  },
+  "devDependencies": {
+    "standard": "^16.0.3"
+  }
+}
