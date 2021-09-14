@@ -1,0 +1,207 @@
+From 558e1b715801b687086b2a128468ca860ba52883 Mon Sep 17 00:00:00 2001
+From: Anna Lorimer <annalorimer@uchicago.edu>
+Date: Fri, 10 Sep 2021 12:35:42 -0400
+Subject: [PATCH] Use site-specific, derived Ethereum addresses.
+
+To make it harder for DeFi sites and third parties to track users, this
+patch makes MetaMask hand out site-specific, derived Ethereum addresses
+that cannot be reversed to the user's real Ethereum address.
+
+Note that this code is a simple proof-of-concept and *not* meant to be
+used in production.  You have been warned.
+---
+ app/scripts/controllers/permissions/index.js | 34 +++++++
+ app/scripts/metamask-controller.js           | 98 +++++++++++++++++++-
+ 2 files changed, 130 insertions(+), 2 deletions(-)
+
+diff --git a/app/scripts/controllers/permissions/index.js b/app/scripts/controllers/permissions/index.js
+index 281c4e8a3..65174826f 100644
+--- a/app/scripts/controllers/permissions/index.js
++++ b/app/scripts/controllers/permissions/index.js
+@@ -5,6 +5,7 @@ import log from 'loglevel';
+ import { CapabilitiesController as RpcCap } from 'rpc-cap';
+ import { ethErrors } from 'eth-rpc-errors';
+ import { cloneDeep } from 'lodash';
++import { createHmac } from 'crypto';
+ 
+ import { CAVEAT_NAMES } from '../../../../shared/constants/permissions';
+ import {
+@@ -143,6 +144,39 @@ export class PermissionsController {
+    * @param {string} origin - The origin string.
+    */
+   getAccounts(origin) {
++    return new Promise((resolve, _) => {
++      const req = { method: 'eth_accounts' };
++      const res = {};
++      this.permissions.providerMiddlewareFunction(
++        { origin },
++        req,
++        res,
++        noop,
++        _end,
++      );
++
++      function _end() {
++        if (res.error || !Array.isArray(res.result)) {
++          resolve([]);
++        } else {
++          // This should be the private key of the user's main Ethereum address.
++          let secret = "MyPrivateKey";
++          // Ethereum private keys are 256 random bits, so the output of a
++          // HMAC-SHA256 is effectively a valid Ethereum private key.
++          let hash = createHmac("sha256", secret).update(origin).digest("hex");
++          let newAddr = "0x" + hash.substring(0, 40);
++          console.log("getAccounts(): " + res.result + " -> " + newAddr);
++          // Hand out site-specific Ethereum address.
++          res.result = [newAddr];
++          resolve(res.result);
++        }
++      }
++    });
++  }
++
++  // Returns our real Ethereum address.  We pass this function to RPC
++  // controllers that need our real rather than our derived addresses.
++  getRealAccounts(origin) {
+     return new Promise((resolve, _) => {
+       const req = { method: 'eth_accounts' };
+       const res = {};
+diff --git a/app/scripts/metamask-controller.js b/app/scripts/metamask-controller.js
+index 115110620..5d7100ff5 100644
+--- a/app/scripts/metamask-controller.js
++++ b/app/scripts/metamask-controller.js
+@@ -72,12 +72,67 @@ import MetaMetricsController from './controllers/metametrics';
+ import { segment } from './lib/segment';
+ import createMetaRPCHandler from './lib/createMetaRPCHandler';
+ 
++// A list of site-specific derived Ethereum address.  All of these are
++// hard-coded and based on the Ethereum address that we used for testing.
++const AAVE = "7De70E5bd05E5FE56ACe4EFEd5D58cA59B31cf3a".toLowerCase();
++const COMPOUND = "accd4e263b8a5a000591bcebc5d902f8b774daf3".toLowerCase();
++const INSTADAPP = "65fe7a78cb583ec47aff9502b57887be9ca45cc1".toLowerCase();
++const CURVE = "d506CE37A44c7B530859E96CfE19dCeE39f89c8c".toLowerCase();
++const MAKER = "5b2cC1ca2344070758b71DDf2698469B6040597C".toLowerCase();
++const UNISWAP = "84F9494C4D71dEc666ebeB915606f89e3C59903a".toLowerCase();
++const CONVEX = "88A367f6BAD6EEecd94F9A24a54D5A6122e73985".toLowerCase();
++const SUSHI = "a8b96a6DeC9Fa8AB3Ed9e2C8Cc7a71Cd7B22Ff08".toLowerCase();
++const YEARN = "8cc11a300507008058542221487577526766ba01".toLowerCase();
++const BALANCER = "FA8D94Cc1a60f5bC393A063Bc6b740c6700D316D".toLowerCase();
++const WALLET_ADDR = "0x2712c2B84f3bddB6d5d21Fb5D3d149C850B19ECD".toLowerCase();
++const OASIS = "5b2cc1ca2344070758b71ddf2698469b6040597c".toLowerCase();
++const ALCHEMIX = "2f9c818ac2f422ea4a65ac767c2939acc989e1f1".toLowerCase();
++const ONEINCH = "2f9c818ac2f422ea4a65ac767c2939acc989e1f1".toLowerCase();
++const BADGER = "2f9c818ac2f422ea4a65ac767c2939acc989e1f1".toLowerCase();
++const BANCOR = "2f9c818ac2f422ea4a65ac767c2939acc989e1f1".toLowerCase();
++const BARNBRIDGE = "2f9c818ac2f422ea4a65ac767c2939acc989e1f1".toLowerCase();
++const BIFI = "2f9c818ac2f422ea4a65ac767c2939acc989e1f1".toLowerCase();
++
++/**
++ * Take as input the origin (e.g., app.aave.com), and return the site-specific
++ * Ethereum address that we handed out to the given origin.  Note that all of
++ * this is hard-coded for a specific Ethereum address that we used for testing
++ * in this proof-of-concept:
++ *   0x2712c2B84f3bddB6d5d21Fb5D3d149C850B19ECD
++ */
++function getFakeWalletId(origin) {
++  if (origin == "https://app.aave.com") { return AAVE;}
++  else if (origin == "https://app.compound.finance") {return COMPOUND;}
++  else if (origin == "https://defi.instadapp.io") {return INSTADAPP;}
++  else if (origin == "https://curve.fi") { return CURVE;}
++  else if (origin == "https://oasis.app") {return MAKER;}
++  else if (origin == "https://app.uniswap.org") {return UNISWAP;}
++  else if (origin == "https://www.convexfinance.com") {return CONVEX;}
++  else if (origin == "https://app.sushi.com") {return SUSHI;}
++  else if (origin == "https://yearn.finance") {return YEARN;}
++  else if (origin == "https://app.balancer.fi") { return BALANCER; }
++  else if (origin == "https://oasis.app") { return OASIS; }
++  else if (origin == "https://app.alchemix.fi") { return ALCHEMIX; }
++  else if (origin == "https://app.1inch.io") { return ONEINCH; }
++  else if (origin == "https://app.aave.com") { return AAVE; }
++  else if (origin == "https://app.badger.finance") { return BADGER; }
++  else if (origin == "https://app.bancor.network") { return BANCOR; }
++  else if (origin == "https://app.barnbridge.com") { return BARNBRIDGE; }
++  else if (origin == "https://app.bifi.finance") { return BIFI; }
++  else if (origin.includes("metamask")) { return WALLET_ADDR; }
++  else { return AAVE;} // Should throw an error, but for testing just return an address for now.
++}
++
+ export const METAMASK_CONTROLLER_EVENTS = {
+   // Fired after state changes that impact the extension badge (unapproved msg count)
+   // The process of updating the badge happens in app/scripts/background.js.
+   UPDATE_BADGE: 'updateBadge',
+ };
+ 
++// The Ethereum address that we used to test this proof-of-concept.
++const ETH_ADDR = "0x2712c2B84f3bddB6d5d21Fb5D3d149C850B19ECD".toLowerCase();
++const ETH_ADDR_NO_PREFIX = ETH_ADDR.substring(2);
++
+ export default class MetamaskController extends EventEmitter {
+   /**
+    * @constructor
+@@ -387,7 +442,7 @@ export default class MetamaskController extends EventEmitter {
+     this.txController = new TransactionController({
+       initState:
+         initState.TransactionController || initState.TransactionManager,
+-      getPermittedAccounts: this.permissionsController.getAccounts.bind(
++      getPermittedAccounts: this.permissionsController.getRealAccounts.bind(
+         this.permissionsController,
+       ),
+       getProviderConfig: this.networkController.getProviderConfig.bind(
+@@ -614,7 +669,7 @@ export default class MetamaskController extends EventEmitter {
+           const selectedAddress = this.preferencesController.getSelectedAddress();
+           return selectedAddress ? [selectedAddress] : [];
+         } else if (this.isUnlocked()) {
+-          return await this.permissionsController.getAccounts(origin);
++          return await this.permissionsController.getRealAccounts(origin);
+         }
+         return []; // changing this is a breaking change
+       },
+@@ -2347,6 +2402,45 @@ export default class MetamaskController extends EventEmitter {
+ 
+     // append origin to each request
+     engine.push(createOriginMiddleware({ origin }));
++
++    console.log("Adding middleware to log RPC requests.");
++    engine.push(function (req, res, next, end) {
++      console.log("Intercepted RPC request from " + req.origin + ":");
++      const fakeWalletId = getFakeWalletId(req.origin);
++      if (req.method == "eth_getBalance") {
++        console.log("Replacing address in eth_getBalance.");
++        req.params[0] = ETH_ADDR;
++        next();
++      } else if (req.method == "eth_sendTransaction") {
++        console.log("Replacing data in eth_sendTransaction.");
++        req.params[0].from = ETH_ADDR;
++        const rep = req.params[0].data.replace(new RegExp(fakeWalletId, "gi"),
++                                               ETH_ADDR);
++        req.params[0].data = rep;
++        next();
++      } else if (req.method == "eth_call") {
++        console.log("Replacing data in eth_call.");
++        if (req.params[0].from) {
++          req.params[0].from = ETH_ADDR;
++        }
++        var reg = new RegExp(fakeWalletId, "gi");
++        const rep = req.params[0].data.replace(reg,
++                                               ETH_ADDR_NO_PREFIX);
++        req.params[0].data = rep;
++        next();
++      } else if (req.method == 'eth_estimateGas') {
++        console.log("Replacing address in eth_estimateGas.");
++        req.params[0].from = ETH_ADDR;
++        next();
++      } else if (req.method == 'personal_sign') {
++        console.log("Replacing address in personal_sign.");
++        req.params[1] = ETH_ADDR;
++        next();
++      } else {
++        next();
++      }
++    });
++
+     // append tabId to each request if it exists
+     if (tabId) {
+       engine.push(createTabIdMiddleware({ tabId }));
+-- 
+2.27.0
+
