@@ -1,3 +1,31 @@
+# request-logger
+
+## Run logger over multiple sites
+
+Before running the logger over multiple sites, open run-multiple.sh and
+correctly set its environment variables.  Once that's done, run:
+
+```
+./run-multiple.sh PATH_TO_SITES
+```
+
+The variable `PATH_TO_SITES` must point to a file that contains URLs, one per
+line.  If you want to run the logger with MetaMask enabled, you first have to
+install it in the Chrome profile.  To do so, open the logger for a few minutes
+on a dummy site, and go through MetaMask's onboarding process:
+
+```
+./run.js \
+    --interactive \
+    --binary /opt/google/chrome/google-chrome \
+    --profile /path/to/chrome/profile \
+    --secs 300 \
+    --url 'https://dummy.com'
+```
+
+## Run logger over a single site
+
+```
 usage: run.js [-h] -b BINARY [--debug {none,debug,verbose}] -u URL
               [-p PROFILE] [-a] [--interactive] [-t SECS]
 
@@ -18,3 +46,4 @@ optional arguments:
   --interactive         Show the browser when recording (by default runs
                         headless).
   -t SECS, --secs SECS  The dwell time in seconds. Defaults: 30 sec.
+```
