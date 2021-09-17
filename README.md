@@ -4,6 +4,8 @@ This repository contains the code and data that we developed as part of our
 research project on privacy and security issues in decentralized finance (DeFi).
 You can find our [technical report on arXiv.org](https://arxiv.org/abs/2109.06836).
 
+The following list explains the purpose of each directory in this repository.
+
 ## Code
 
 * [request-logger/](request-logger): A
